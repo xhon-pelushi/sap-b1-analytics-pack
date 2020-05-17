@@ -1,0 +1,233 @@
+# SAP B1 Analytics Pack Configuration
+# Copy this file to config.yaml and update with your credentials
+
+# Source Database - SAP Business One
+source_database:
+  type: "mssql"  # Options: mssql, hana, postgres
+  host: "your-sap-server.company.com"
+  port: 1433
+  database: "SBODemoUS"  # Your SAP B1 company database
+  username: "sa"
+  password: "your-secure-password"
+  driver: "ODBC Driver 17 for SQL Server"
+  
+  # Connection pool settings
+  pool_size: 5
+  max_overflow: 10
+  pool_timeout: 30
+  pool_recycle: 3600
+  
+  # Query timeout in seconds
+  query_timeout: 300
+
+# Analytics Database - Target Data Warehouse
+analytics_database:
+  type: "mssql"  # Options: mssql, postgres
+  host: "your-analytics-server.company.com"
+  port: 1433
+  database: "SAP_B1_Analytics"
+  username: "analytics_user"
+  password: "your-secure-password"
+  driver: "ODBC Driver 17 for SQL Server"
+  
+  # Schema names
+  schemas:
+    staging: "staging"
+    analytics: "analytics"
+    kpis: "kpis"
+  
+  # Connection pool settings
+  pool_size: 10
+  max_overflow: 20
+  pool_timeout: 30
+
+# ETL Pipeline Configuration
+etl:
+  # Batch processing
+  batch_size: 10000
+  parallel_workers: 4
+  
+  # Date ranges for initial load
+  initial_load:
+    start_date: "2023-01-01"
+    end_date: null  # null means current date
+  
+  # Incremental load settings
+  incremental:
+    enabled: true
+    lookback_days: 7  # Days to look back for changed records
+    
+  # Data quality checks
+  data_quality:
+    enabled: true
+    fail_on_error: false
+    max_error_rate: 0.05  # 5% max error rate
+    
+  # Transformation rules
+  transformations:
+    currency_conversion:
+      enabled: true
+      base_currency: "USD"
+    
+    customer_classification:
+      enabled: true
+      tiers: ["A", "B", "C", "D"]
+      
+    item_categorization:
+      enabled: true
+
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # File logging
+  file:
+    enabled: true
+    path: "logs/etl.log"
+    max_bytes: 10485760  # 10MB
+    backup_count: 5
+    
+  # Console logging
+  console:
+    enabled: true
+    colored: true
+
+# Scheduling (for production use)
+scheduling:
+  enabled: false
+  
+  # Cron-style schedules
+  jobs:
+    - name: "daily_full_refresh"
+      schedule: "0 2 * * *"  # 2 AM daily
+      pipeline: "full"
+      
+    - name: "hourly_incremental"
+      schedule: "0 * * * *"  # Every hour
+      pipeline: "incremental"
+      
+    - name: "weekly_data_quality"
+      schedule: "0 3 * * 0"  # 3 AM Sunday
+      pipeline: "data_quality"
+
+# KPI Configuration
+kpis:
+  # On-Time Delivery
+  otd:
+    enabled: true
+    grace_period_days: 0  # Days after promised date still considered on-time
+    exclude_weekends: true
+    
+  # Inventory Aging
+  inventory_aging:
+    enabled: true
+    aging_buckets: [30, 60, 90, 180, 365]
+    include_zero_stock: false
+    
+  # Sales Margin
+  sales_margin:
+    enabled: true
+    exclude_returns: false
+    min_margin_threshold: -100  # Percentage
+    max_margin_threshold: 100
+    
+  # Forecast Accuracy
+  forecast_accuracy:
+    enabled: true
+    forecast_source: "OHEM"  # SAP B1 forecast table
+    calculation_method: "MAPE"  # Mean Absolute Percentage Error
+    
+  # OEE (Overall Equipment Effectiveness)
+  oee:
+    enabled: true
+    target_availability: 90
+    target_performance: 85
+    target_quality: 99
+
+# Email Notifications
+notifications:
+  enabled: false
+  smtp:
+    host: "smtp.gmail.com"
+    port: 587
+    use_tls: true
+    username: "your-email@company.com"
+    password: "your-app-password"
+    
+  recipients:
+    success: ["analytics-team@company.com"]
+    failure: ["analytics-team@company.com", "it-support@company.com"]
+    
+  # Alert thresholds
+  alerts:
+    pipeline_failure: true
+    data_quality_threshold: 0.10  # Alert if >10% error rate
+    execution_time_threshold: 3600  # Alert if pipeline takes >1 hour
+
+# SAP B1 Specific Settings
+sap_b1:
+  # Company code
+  company_code: "US01"
+  
+  # Fiscal year settings
+  fiscal_year:
+    start_month: 1  # January
+    
+  # Currency settings
+  local_currency: "USD"
+  system_currency: "USD"
+  
+  # Table prefixes (if using custom tables)
+  custom_table_prefix: "U_"
+  
+  # UDF (User Defined Fields) configuration
+  udf:
+    enabled: true
+    prefix: "U_"
+
+# Performance Tuning
+performance:
+  # Memory management
+  max_memory_mb: 4096
+  chunk_size: 10000
+  
+  # SQL optimization
+  use_bulk_insert: true
+  use_indexes: true
+  parallel_execution: true
+  
+  # Caching
+  cache:
+    enabled: true
+    ttl_seconds: 3600
+    max_size_mb: 1024
+
+# Security
+security:
+  # Encrypt sensitive data in logs
+  mask_credentials: true
+  
+  # SSL/TLS for database connections
+  use_ssl: false
+  verify_ssl: true
+  
+  # Audit logging
+  audit_log:
+    enabled: true
+    path: "logs/audit.log"
+
+# Development/Testing
+development:
+  # Use sample data instead of real SAP B1 connection
+  use_sample_data: false
+  
+  # Limit records for testing
+  limit_records: null  # Set to integer to limit rows
+  
+  # Debug mode
+  debug: false
+  
+  # Profile performance
+  profile: false
+
